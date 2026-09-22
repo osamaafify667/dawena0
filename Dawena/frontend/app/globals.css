@@ -1,0 +1,50 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+  background: #0f172a;
+  color: #f1f5f9;
+  min-height: 100vh;
+}
+.container { max-width: 1000px; margin: 0 auto; padding: 24px 16px 60px; }
+.hero { text-align: center; padding: 40px 0 24px; }
+.hero h1 { font-size: 2.2rem; margin-bottom: 8px; }
+.hero h1 span { color: #22c55e; }
+.hero p { color: #94a3b8; }
+.search-box {
+  display: flex; gap: 8px; margin: 24px 0;
+  background: #1e293b; padding: 8px; border-radius: 14px;
+  border: 1px solid #334155;
+}
+.search-box input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: #fff; font-size: 1rem; padding: 10px;
+  direction: ltr; text-align: left;
+}
+.search-box button, .btn {
+  background: #22c55e; color: #052e16; border: none;
+  padding: 12px 22px; border-radius: 10px; font-weight: bold;
+  cursor: pointer; font-size: 1rem; text-decoration: none;
+  display: inline-block;
+}
+.search-box button:disabled { opacity: .6; cursor: wait; }
+.btn-secondary { background: #334155; color: #fff; }
+.btn-mp3 { background: #f59e0b; color: #451a03; }
+.card {
+  background: #1e293b; border: 1px solid #334155;
+  border-radius: 14px; padding: 18px; margin-top: 18px;
+}
+.card h2 { font-size: 1.2rem; margin-bottom: 6px; }
+.meta { color: #94a3b8; font-size: .9rem; margin-bottom: 12px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-top: 12px; }
+.grid img, .thumb { width: 100%; border-radius: 10px; aspect-ratio: 16/9; object-fit: cover; background: #000; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+select {
+  background: #0f172a; color: #fff; border: 1px solid #475569;
+  padding: 10px; border-radius: 10px;
+}
+.error { background: #450a0a; border: 1px solid #ef4444; color: #fecaca; padding: 12px; border-radius: 10px; margin-top: 16px; }
+.scan-clean { color: #22c55e; font-weight: bold; }
+.scan-bad { color: #ef4444; font-weight: bold; }
+.file-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid #334155; }
+.file-item a { color: #38bdf8; }
+.note { color: #94a3b8; font-size: .85rem; margin-top: 24px; text-align: center; line-height: 1.8; }

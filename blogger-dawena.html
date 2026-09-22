@@ -1,0 +1,135 @@
+<div id="dawena-app" dir="rtl" style="font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#0f172a;color:#f1f5f9;border-radius:16px;padding:20px;max-width:900px;margin:0 auto;min-height:80vh">
+<style>
+body{background:#0b1120 !important}
+#dawena-app *{box-sizing:border-box}
+#dawena-app h1{text-align:center;font-size:26px;margin:0 0 6px}
+#dawena-app h1 span{color:#22c55e}
+#dawena-app .sub{text-align:center;color:#94a3b8;font-size:14px;margin-bottom:14px;line-height:1.8}
+#dawena-app .box{display:flex;gap:8px;background:#1e293b;padding:8px;border-radius:12px;border:1px solid #334155}
+#dawena-app input{flex:1;background:transparent;border:none;outline:none;color:#fff;font-size:15px;padding:10px;direction:ltr;text-align:left}
+#dawena-app button,.dbtn{background:#22c55e;color:#052e16;border:none;padding:11px 18px;border-radius:10px;font-weight:bold;cursor:pointer;font-size:14px;text-decoration:none;display:inline-block}
+#dawena-app button:disabled{opacity:.6}
+#dawena-app .card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px;margin-top:14px}
+#dawena-app .meta{color:#94a3b8;font-size:13px;margin:6px 0}
+#dawena-app .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}
+#dawena-app .grid img{width:100%;border-radius:10px;aspect-ratio:16/9;object-fit:cover;background:#000}
+#dawena-app .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+#dawena-app select{background:#0f172a;color:#fff;border:1px solid #475569;padding:10px;border-radius:10px}
+#dawena-app .err{background:#450a0a;border:1px solid #ef4444;color:#fecaca;padding:10px;border-radius:10px;margin-top:12px}
+#dawena-app .ok{color:#22c55e;font-weight:bold}
+#dawena-app .bad{color:#ef4444;font-weight:bold}
+#dawena-app .frow{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #334155;font-size:14px}
+#dawena-app .frow a{color:#38bdf8}
+#dawena-app .note{color:#94a3b8;font-size:12px;margin-top:14px;text-align:center;line-height:1.9}
+#dawena-app .sec{color:#38bdf8;text-decoration:none}
+</style>
+
+<h1>🚀 <span>Dawena</span> downloader</h1>
+<div class="sub">الصق لينك من يوتيوب / تيك توك / انستا / فيسبوك / X أو أي موقع — وهنطلعلك الصور والفيديوهات والملفات + MP3 + فحص فيروسات</div>
+
+<div class="box">
+<input id="d-url" placeholder="https://..." />
+<button id="d-go" onclick="dawenaFetch()">عرض المحتوى</button>
+</div>
+
+<div id="d-err"></div>
+<div id="d-scan"></div>
+<div id="d-result"></div>
+
+<p class="note">⚠️ حمّل فقط المحتوى المسموح به.<br/><b style="color:#f1f5f9;font-size:15px">🛡️ الموقع بيفحص كل المحتوى من أي فيروسات أو برامج ضارة علشان يحافظ على جهازك</b><br/>مدعوم من <a class="sec" href="https://github.com" target="_blank">Dawena</a></p>
+
+<script>
+//<![CDATA[
+var DAWENA_API = "https://dawena.onrender.com";
+var DAWENA_DATA = null;
+var DAWENA_URL = "";
+
+function dErr(m){document.getElementById('d-err').innerHTML = m ? '<div class="err">'+m+'</div>' : '';}
+
+async function dawenaFetch(){
+  var url = document.getElementById('d-url').value.trim();
+  dErr(''); document.getElementById('d-result').innerHTML=''; document.getElementById('d-scan').innerHTML='';
+  if(!url.startsWith('http')){ dErr('الصق رابط صحيح يبدأ بـ http'); return; }
+  DAWENA_URL = url;
+  var btn = document.getElementById('d-go'); btn.disabled = true; btn.innerText = 'جاري التحليل...';
+  try{
+    var r = await fetch(DAWENA_API + '/api/info',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url})});
+    var j = await r.json();
+    if(!r.ok) throw new Error(j.detail || 'تعذر تحليل الرابط');
+    DAWENA_DATA = j;
+    dawenaRender(j);
+    dawenaScan(url);
+  }catch(e){ dErr(e.message); }
+  btn.disabled = false; btn.innerText = 'عرض المحتوى';
+}
+
+async function dawenaScan(url){
+  try{
+    var r = await fetch(DAWENA_API + '/api/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url})});
+    var s = await r.json();
+    var html = '<div class="card">🛡️ فحص VirusTotal: ';
+    if(s.scanned){ html += s.verdict==='clean' ? '<b class="ok">'+s.message+'</b>' : '<b class="bad">'+s.message+'</b>'; }
+    else{ html += '<span class="meta">'+s.message+'</span>'; }
+    document.getElementById('d-scan').innerHTML = html + '</div>';
+  }catch(e){}
+}
+
+function dawenaRender(d){
+  var h = '<div class="card"><h3 style="margin:0">'+escapeHtml(d.title||'بدون عنوان')+'</h3>';
+  h += '<div class="meta">'+escapeHtml(d.platform||'')+'</div>';
+  if(d.thumbnail) h += '<img src="'+d.thumbnail+'" style="width:100%;border-radius:10px;aspect-ratio:16/9;object-fit:cover;background:#000" />';
+  if(d.videos && d.videos.length){
+    h += '<h3>🎬 الفيديو — اختار الجودة</h3><div class="row"><select id="d-q"><option value="best">أعلى جودة تلقائية</option>';
+    d.videos.forEach(function(v,i){ h += '<option value="'+v.format_id+'">'+escapeHtml(v.quality)+' • '+escapeHtml(v.ext)+'</option>'; });
+    h += '</select> <a class="dbtn" id="d-dl" href="#" target="_blank">⬇️ تحميل فيديو MP4</a> ';
+    h += '<button onclick="dawenaMp3(this)">🎵 تحميل صوت MP3 فقط</button></div>';
+  }
+  h += '</div>';
+  if(d.images && d.images.length){
+    h += '<div class="card"><h3>🖼️ الصور ('+d.images.length+')</h3><div class="grid">';
+    d.images.slice(0,24).forEach(function(im){
+      h += '<div><img loading="lazy" src="'+im.url+'" /><div class="row"><a class="dbtn" style="background:#334155;color:#fff" href="'+im.url+'" target="_blank" download>تحميل</a></div></div>';
+    });
+    h += '</div></div>';
+  }
+  if(d.files && d.files.length){
+    h += '<div class="card"><h3>📁 ملفات أخرى ('+d.files.length+')</h3>';
+    d.files.forEach(function(f){ h += '<div class="frow"><span>'+escapeHtml(f.name||f.url)+'</span><a href="'+f.url+'" target="_blank">تحميل ⬇️</a></div>'; });
+    h += '</div>';
+  }
+  if(!(d.videos||[]).length && !(d.images||[]).length && !(d.files||[]).length){
+    h += '<div class="err">لم نجد محتوى قابل للتحميل في هذا الرابط.</div>';
+  }
+  document.getElementById('d-result').innerHTML = h;
+  var q = document.getElementById('d-q');
+  var dl = document.getElementById('d-dl');
+  function upd(){
+    if(!q||!dl) return;
+    if(DAWENA_DATA && DAWENA_DATA.source && DAWENA_DATA.source!=='ytdlp'){
+      var v=(DAWENA_DATA.videos||[]).find(function(x){return x.format_id===q.value;});
+      dl.href = v ? v.direct_url : '#';
+    } else {
+      dl.href = DAWENA_API + '/api/download?url=' + encodeURIComponent(DAWENA_URL) + '&format_id=' + encodeURIComponent(q.value);
+    }
+  }
+  if(q){ q.onchange = upd; upd(); }
+}
+
+async function dawenaMp3(btn){
+  if (DAWENA_DATA && DAWENA_DATA.audios && DAWENA_DATA.audios[0] && DAWENA_DATA.audios[0].direct_url) {
+    var a0 = document.createElement('a'); a0.href = DAWENA_DATA.audios[0].direct_url; a0.download = 'dawena-audio.mp3'; a0.target = '_blank'; a0.click();
+    return;
+  }
+  btn.disabled = true; var old = btn.innerText; btn.innerText = 'جاري التحويل...'; dErr('');
+  try{
+    var r = await fetch(DAWENA_API + '/api/mp3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:DAWENA_URL})});
+    if(!r.ok){ var j = await r.json().catch(function(){return {};}); throw new Error(j.detail||'فشل تحويل MP3'); }
+    var b = await r.blob();
+    var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'dawena-audio.mp3'; a.click();
+  }catch(e){ dErr(e.message); }
+  btn.disabled = false; btn.innerText = old;
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+//]]>
+</script>
+</div>
